@@ -10,17 +10,23 @@ import dlib
 # Selfmade
 import config   as cfg
 
-def template_matching(target_img_path, template_img_path, threshold=0.8):
+def template_matching(target_img_path, template_img_path, method, threshold=0.8):
     target_img_rgb = cv2.imread(target_img_path)
     target_img_gray = cv2.cvtColor(target_img_rgb, cv2.COLOR_BGR2GRAY)
 
     template_img = cv2.imread(template_img_path, 0)
     w, h = template_img.shape[::-1]
 
-    res = cv2.matchTemplate(target_img_gray, template_img, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(res >= threshold)
-    for pt in zip(*loc[::-1]):
-        cv2.rectangle(target_img_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
+    method = eval(method)
+    res = cv2.matchTemplate(target_img_gray, template_img, method)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+    # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+    if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+        top_left = min_loc
+    else:
+        top_left = max_loc
+    bottom_right = (top_left[0] + w, top_left[1] + h)
+    cv2.rectangle(target_img_rgb, top_left, bottom_right, (0, 0, 255), 2)
     target_img_rgb = imutils.resize(target_img_rgb, width=350)
 
     return target_img_rgb

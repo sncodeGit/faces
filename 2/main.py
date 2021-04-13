@@ -20,6 +20,18 @@ class facesWindowSettings():
         self.imagesTypes = imagesTypes
         self.acceptButtonWidth = acceptButtonWidth
 
+class buttonCheckbox(QObject):
+
+    def __init__(self):
+        super().__init__()
+        self.method = None
+
+    def addButton(self, button):
+        button.clicked.connect(lambda: self.check(button))
+
+    def check(self, button):
+        self.method = button.text()
+
 class facesWindow(QWidget):
 
     chosen_files = {
@@ -42,6 +54,8 @@ class facesWindow(QWidget):
         self.t_label = QLabel(self)
         self.t_tab = QFrame()
         self.t_vLayout = QVBoxLayout()
+        self.t_checkboxes = {}
+        self.t_group_checkbox = buttonCheckbox()
         # Viola-Jones tab
         self.v_buttons = {}
         self.v_label = QLabel(self)
@@ -70,8 +84,20 @@ class facesWindow(QWidget):
         chooseTarget.clicked.connect(self.t_on_click_chooseTarget)
         self.t_buttons['chooseTarget'] = chooseTarget
 
+        for method in ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
+            'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']:
+            button = QRadioButton()
+            button.setText(method)
+            self.t_checkboxes[button] = 0
+            self.t_group_checkbox.addButton(button)
+
+        hCheckbox = QHBoxLayout()
+        for i in self.t_checkboxes.keys():
+            hCheckbox.addWidget(i)
+
         self.t_vLayout.addWidget(self.t_buttons['chooseStandard'])
         self.t_vLayout.addWidget(self.t_buttons['chooseTarget'])
+        self.t_vLayout.addLayout(hCheckbox)
         self.t_vLayout.addWidget(self.t_buttons['accept'],
                 alignment=Qt.AlignCenter | Qt.AlignTop)
         self.t_tab.setLayout(self.t_vLayout)
@@ -122,7 +148,7 @@ class facesWindow(QWidget):
 
         self.setGeometry(self.Settings.X_offset, self.Settings.Y_offset,
                         self.Settings.Width, self.Settings.Height)
-        self.setWindowTitle('Детекция лиц')
+        self.setWindowTitle('Практика 2: детекция лиц')
         self.show()
 
     def clear_chosen_files(self):
@@ -134,7 +160,8 @@ class facesWindow(QWidget):
 
     def t_on_click_main(self):
         self.t_label.clear()
-        image = template_matching(self.chosen_files['t']['target'], self.chosen_files['t']['standard'])
+        image = template_matching(self.chosen_files['t']['target'],
+                self.chosen_files['t']['standard'], self.t_group_checkbox.method)
         height, width, channel = image.shape
         bytesPerLine = 3 * width
         image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
@@ -143,9 +170,9 @@ class facesWindow(QWidget):
         self.t_label.setPixmap(pixmap)
         self.t_vLayout.addWidget(self.t_label, alignment=Qt.AlignCenter | Qt.AlignTop)
         self.t_tab.setLayout(self.t_vLayout)
-        self.clear_chosen_files()
-        self.t_buttons['chooseStandard'].setText(self.chooseButtonText + ' эталона')
-        self.t_buttons['chooseTarget'].setText(self.chooseButtonText + ' фотографии')
+        # self.clear_chosen_files()
+        # self.t_buttons['chooseStandard'].setText(self.chooseButtonText + ' эталона')
+        # self.t_buttons['chooseTarget'].setText(self.chooseButtonText + ' фотографии')
 
     def t_on_click_chooseStandard(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
@@ -172,8 +199,8 @@ class facesWindow(QWidget):
         self.v_label.setPixmap(pixmap)
         self.v_vLayout.addWidget(self.v_label, alignment=Qt.AlignCenter | Qt.AlignTop)
         self.v_tab.setLayout(self.v_vLayout)
-        self.clear_chosen_files()
-        self.v_buttons['choose'].setText(self.chooseButtonText)
+        # self.clear_chosen_files()
+        # self.v_buttons['choose'].setText(self.chooseButtonText)
 
     def v_on_click_choose(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
@@ -193,8 +220,8 @@ class facesWindow(QWidget):
         self.s_label.setPixmap(pixmap)
         self.s_vLayout.addWidget(self.s_label, alignment=Qt.AlignCenter | Qt.AlignTop)
         self.s_tab.setLayout(self.s_vLayout)
-        self.clear_chosen_files()
-        self.s_buttons['choose'].setText(self.chooseButtonText)
+        # self.clear_chosen_files()
+        # self.s_buttons['choose'].setText(self.chooseButtonText)
 
     def s_on_click_choose(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
@@ -202,60 +229,6 @@ class facesWindow(QWidget):
         self.chosen_files['s']['target'] = file_path
         file_name = file_path.split('/')[-1]
         self.s_buttons['choose'].setText(file_name)
-
-    def on_click_t(self):
-        file1 = QFileDialog.getOpenFileName(self, self.chooseButtonText,
-                None, 'Images (' + self.Settings.imagesTypes + ')')[0]
-        self.btn_t.setText(file1)
-        self.label.clear()
-        print(file1)
-        pass
-        # file1 = QFileDialog.getOpenFileName(self, 'Choose image', None, 'Images (*.png *.xpm *.jpg)')[0]
-        # file2 = QFileDialog.getOpenFileName(self, 'Choose template', None, 'Images (*.png *.xpm *.jpg)')[0]
-        # self.label.clear()
-        # image = template_matching.template_matching(file1, file2)
-        # height, width, channel = image.shape
-        # bytesPerLine = 3 * width
-        # image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        # image = QImage.rgbSwapped(image)
-        # pixmap = QPixmap.fromImage(image)
-        # self.label.setPixmap(pixmap)
-        # self.label.resize(pixmap.width(), pixmap.height())
-        # self.resize(pixmap.width(), pixmap.height())
-        # self.layout_tab_1.addWidget(self.label, alignment=Qt.AlignCenter | Qt.AlignTop)
-        # self.tab_1.setLayout(self.layout_tab_1)
-
-    def on_click_v(self):
-        pass
-        # file = QFileDialog.getOpenFileName(self, 'Choose image', None, 'Images (*.png *.xpm *.jpg)')[0]
-        # self.label2.clear()
-        # image = ViolaJones.viola_jones(file)
-        # height, width, channel = image.shape
-        # bytesPerLine = 3 * width
-        # image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        # image = QImage.rgbSwapped(image)
-        # pixmap = QPixmap.fromImage(image)
-        # self.label2.setPixmap(pixmap)
-        # self.label2.resize(pixmap.width(), pixmap.height())
-        # self.resize(pixmap.width(), pixmap.height())
-        # self.layout_tab_2.addWidget(self.label2, alignment=Qt.AlignCenter | Qt.AlignTop)
-        # self.tab_2.setLayout(self.layout_tab_2)
-
-    def on_click_s(self):
-        pass
-        # file = QFileDialog.getOpenFileName(self, 'Choose image', None, 'Images (*.png *.xpm *.jpg)')[0]
-        # self.label3.clear()
-        # image = symmetryLines.symmetryLines(file)
-        # height, width, channel = image.shape
-        # bytesPerLine = 3 * width
-        # image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        # image = QImage.rgbSwapped(image)
-        # pixmap = QPixmap.fromImage(image)
-        # self.label3.setPixmap(pixmap)
-        # self.label3.resize(pixmap.width(), pixmap.height())
-        # self.resize(pixmap.width(), pixmap.height())
-        # self.layout_tab_3.addWidget(self.label3, alignment=Qt.AlignCenter | Qt.AlignTop)
-        # self.tab_3.setLayout(self.layout_tab_3)
 
 if __name__ == '__main__':
     app = QApplication([])
