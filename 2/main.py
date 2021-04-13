@@ -7,6 +7,7 @@ from PyQt5.QtGui        import *
 from PyQt5.QtWidgets    import *
 from PyQt5.QtCore       import *
 # Selfmade
+from facedet            import *
 
 class facesWindowSettings():
 
@@ -132,6 +133,16 @@ class facesWindow(QWidget):
         }
 
     def t_on_click_main(self):
+        self.t_label.clear()
+        image = template_matching(self.chosen_files['t']['target'], self.chosen_files['t']['standard'])
+        height, width, channel = image.shape
+        bytesPerLine = 3 * width
+        image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        image = QImage.rgbSwapped(image)
+        pixmap = QPixmap.fromImage(image)
+        self.t_label.setPixmap(pixmap)
+        self.t_vLayout.addWidget(self.t_label, alignment=Qt.AlignCenter | Qt.AlignTop)
+        self.t_tab.setLayout(self.t_vLayout)
         self.clear_chosen_files()
         self.t_buttons['chooseStandard'].setText(self.chooseButtonText + ' эталона')
         self.t_buttons['chooseTarget'].setText(self.chooseButtonText + ' фотографии')
@@ -139,36 +150,56 @@ class facesWindow(QWidget):
     def t_on_click_chooseStandard(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
                 None, 'Images (' + self.Settings.imagesTypes + ')')[0]
-        self.chosen_files['standard'] = file_path
+        self.chosen_files['t']['standard'] = file_path
         file_name = file_path.split('/')[-1]
         self.t_buttons['chooseStandard'].setText(file_name)
 
     def t_on_click_chooseTarget(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
                 None, 'Images (' + self.Settings.imagesTypes + ')')[0]
-        self.chosen_files['target'] = file_path
+        self.chosen_files['t']['target'] = file_path
         file_name = file_path.split('/')[-1]
         self.t_buttons['chooseTarget'].setText(file_name)
 
     def v_on_click_main(self):
+        self.v_label.clear()
+        image = viola_jones(self.chosen_files['v']['target'])
+        height, width, channel = image.shape
+        bytesPerLine = 3 * width
+        image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        image = QImage.rgbSwapped(image)
+        pixmap = QPixmap.fromImage(image)
+        self.v_label.setPixmap(pixmap)
+        self.v_vLayout.addWidget(self.v_label, alignment=Qt.AlignCenter | Qt.AlignTop)
+        self.v_tab.setLayout(self.v_vLayout)
         self.clear_chosen_files()
         self.v_buttons['choose'].setText(self.chooseButtonText)
 
     def v_on_click_choose(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
                 None, 'Images (' + self.Settings.imagesTypes + ')')[0]
-        self.chosen_files['target'] = file_path
+        self.chosen_files['v']['target'] = file_path
         file_name = file_path.split('/')[-1]
         self.v_buttons['choose'].setText(file_name)
 
     def s_on_click_main(self):
+        self.s_label.clear()
+        image = symmetry_lines(self.chosen_files['s']['target'])
+        height, width, channel = image.shape
+        bytesPerLine = 3 * width
+        image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        image = QImage.rgbSwapped(image)
+        pixmap = QPixmap.fromImage(image)
+        self.s_label.setPixmap(pixmap)
+        self.s_vLayout.addWidget(self.s_label, alignment=Qt.AlignCenter | Qt.AlignTop)
+        self.s_tab.setLayout(self.s_vLayout)
         self.clear_chosen_files()
         self.s_buttons['choose'].setText(self.chooseButtonText)
 
     def s_on_click_choose(self):
         file_path = QFileDialog.getOpenFileName(self, self.chooseButtonText,
                 None, 'Images (' + self.Settings.imagesTypes + ')')[0]
-        self.chosen_files['target'] = file_path
+        self.chosen_files['s']['target'] = file_path
         file_name = file_path.split('/')[-1]
         self.s_buttons['choose'].setText(file_name)
 
