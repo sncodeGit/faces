@@ -2,6 +2,7 @@
 test.py
 **/.DS_Store
 example_img/
+2/shape_predictor_68_face_landmarks.dat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
