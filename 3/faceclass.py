@@ -114,7 +114,7 @@ def get_best_params(train, test, method):
 def get_split_data(data, num=2):
     # random.seed(41)
     ran = [int(i) for i in range(10)]
-    random.shuffle(ran)
+    # random.shuffle(ran)
     ran = ran[:num]
     X = data[0]
     y = data[1]
