@@ -3,10 +3,12 @@
 
 import sys
 import matplotlib.pyplot as plt
+import numpy as np
 # QT
 from PyQt5.QtGui        import *
 from PyQt5.QtWidgets    import *
 from PyQt5.QtCore       import *
+from statistics         import mean
 # Selfmade
 from faceclass          import *
 
@@ -42,6 +44,7 @@ class facesWindow(QWidget):
         self._1_checkbox_methods = QComboBox(self)
         self._1_textbox_accuracy = QLineEdit()
         self._1_textbox_parametr = QLineEdit()
+        self._1_exnum_parametr = QLineEdit()
         self._1_lbl_pixmap_1 = QLabel(self)
         self._1_lbl_pixmap_2 = QLabel(self)
         self._1_lbl_pixmap_3 = QLabel(self)
@@ -65,6 +68,7 @@ class facesWindow(QWidget):
         self._3_str_num = 10
         self._3_lbl_plot = QLabel(self)
         # self._3_parambox = []
+        # 4 step
         # Main tab
         self.tab = QTabWidget()
 
@@ -103,8 +107,12 @@ class facesWindow(QWidget):
         hLayout.addWidget(self._1_textbox_parametr)
         self._1_vLayout.addLayout(hLayout)
 
+        self._1_exnum_parametr.setText('Введите номер тестового обьекта для поиска похожего')
+        self._1_exnum_parametr.setAlignment(Qt.AlignCenter)
+        self._1_vLayout.addWidget(self._1_exnum_parametr)
+
         hLayout = QHBoxLayout()
-        accept = QPushButton('Смотреть примеры')
+        accept = QPushButton('Вывести изображения')
         accept.setFixedWidth(self.Settings.acceptButtonWidth)
         accept.clicked.connect(self._1_on_click_examples)
         hLayout.addWidget(accept)
@@ -237,11 +245,14 @@ class facesWindow(QWidget):
         self._3_vLayout.setAlignment(Qt.AlignTop)
         self._3_tab.setLayout(self._3_vLayout)
 
+        # 4 step
+
         # Main tab
 
         self.tab.addTab(self._1_tab, "Поиск лучшего параметра")
         self.tab.addTab(self._2_tab, "Кросс-валидация")
         self.tab.addTab(self._3_tab, "Голосование методов")
+        # self.tab.addTab(self._4_tab, "Примеры")
 
         main_layout = QHBoxLayout()
         main_layout.addWidget(self.tab)
@@ -256,12 +267,84 @@ class facesWindow(QWidget):
 
     def _1_on_click_calculate(self):
         data = get_data()
+        method = eval('get_' + self._1_checkbox_methods.currentText())
         data_train, data_test = get_split_data(data,
                 10 - int(self._1_checkbox_num_elements.currentText()))
-        best_p, accuracy = get_best_params(data_train, data_test,
-                eval('get_' + self._1_checkbox_methods.currentText()))
-        self._1_textbox_accuracy.setText(str(accuracy))
-        self._1_textbox_parametr.setText(str(best_p))
+        if self._1_textbox_parametr == '':
+            best_p, accuracy = get_best_params(data_train, data_test, method)
+            self._1_textbox_accuracy.setText(str(round(accuracy, 3)))
+            self._1_textbox_parametr.setText(str(best_p))
+        else:
+            if method == get_scale:
+                best_p = float(self._1_textbox_parametr.text())
+            else:
+                best_p = int(self._1_textbox_parametr.text())
+            r = classifier(data_train, data_test, method, best_p)
+            accuracy = accuracy_score(r, data_test[1])
+            self._1_textbox_accuracy.setText(str(round(accuracy, 3)))
+
+        fig = plt.figure()#figsize=(14, 8))
+        ax1 = fig.add_subplot(5, 2, 1)
+        ax1.set_title('Тестовое фото')
+        ax1.axis('off')
+        ax2 = fig.add_subplot(5, 2, 2)
+        ax2.set_title('Ближайшее фото')
+        ax2.axis('off')
+        ax3 = fig.add_subplot(4, 2, 3)
+        ax3.set_title('Признак на тесте')
+        ax4 = fig.add_subplot(4, 2, 4)
+        ax4.set_title('Признак на ближайшем')
+        # ax3.axis('off')
+        # ax4.axis('off')
+        ax = fig.add_subplot(2, 1, 2)
+        ax.set_xlim(0, len(data_test[0]))
+        ax.set_ylim(0, 1)
+        plt.ion()
+        res = []
+        for i in range(len(data_test[0])):
+            ax1.clear()
+            ax2.clear()
+            ax3.clear()
+            ax4.clear()
+            ax.clear()
+            ax1.set_title('Тестововое фото')
+            ax2.set_title('Ближайшее фото')
+            ax3.set_title('Признак на тесте')
+            ax4.set_title('Признак на ближайшем')
+            ax.set_xlabel('test_num')
+            ax.set_ylabel('accuracy')
+            ax.set_xlim(0, len(data_test[0]))
+            ax.set_ylim(0, 1)
+            # ax3.axis('off')
+            # ax4.axis('off')
+            ax1.axis('off')
+            ax2.axis('off')
+            image = cv2.resize(data_test[0][i], (100, 100), interpolation=cv2.INTER_AREA)
+            cv2.imwrite('test.jpg', 255 * image)
+            image = plt.imread('test.jpg')
+            ax1.imshow(image, cmap='gray')
+
+            ind = closest(data_train, data_test[0][i], method, best_p)
+            im = data_train[0][ind]
+            if data_test[1][i] == data_train[1][ind]:
+                res.append(1)
+            else:
+                res.append(0)
+
+            ax.plot([i for i in range(len(res))], [mean(res[:i+1]) for i in range(len(res))])
+
+            im = cv2.resize(im, (100, 100), interpolation=cv2.INTER_AREA)
+            cv2.imwrite('test.jpg', 255 * im)
+            image = plt.imread('test.jpg')
+            ax2.imshow(image, cmap='gray')
+
+
+            self.get_plot(method, data_test[0][i], best_p, ax3)
+
+            self.get_plot(method, im, best_p, ax4)
+            plt.pause(2)
+            fig.show()
+            fig.canvas.draw()
 
     def _1_on_click_examples(self):
         data = get_data()
@@ -360,6 +443,78 @@ class facesWindow(QWidget):
                 self._3_textbox_matrix[string][column].setText(
                     str(round(ps[string - 1][column - 1], 3))
                 )
+
+    def get_plot(self, method, im, best_p, ax):
+        if method == get_histogram:
+            hist, bins = get_histogram(im, best_p)
+            hist = np.insert(hist, 0, 0.0)
+            # fig = plt.figure(figsize=(1.1, 1.1))
+            # ax = fig.add_subplot(111)
+            ax.plot(bins, hist)
+            ax.tick_params(axis='x', colors='white')
+            ax.tick_params(axis='y', colors='white')
+            # plt.savefig('plot.png')
+            # plt.close(fig)
+        elif method == get_dct or method == get_dft:
+            ex = method(im, best_p)
+            # fig = plt.figure(figsize=(1.1, 1.1))
+            # ax = fig.add_subplot(111)
+            ax.pcolormesh(range(ex.shape[0]), range(ex.shape[0]), np.flip(ex, 0))
+            ax.tick_params(axis='x', colors='white')
+            ax.tick_params(axis='y', colors='white')
+            # plt.savefig('plot.png')
+            # plt.close(fig)
+        elif method == get_scale:
+            image = cv2.resize(im, (100, 100), interpolation=cv2.INTER_AREA)
+            image = method(image, best_p)
+            cv2.imwrite('plot.png', 255 * image)
+            image = plt.imread('plot.png')
+            ax.imshow(image, cmap='gray')
+        # gradient
+        else:
+            ex = method(im, best_p)
+            # fig = plt.figure(figsize=(1.1, 1.1))
+            # ax = fig.add_subplot(111)
+            ax.plot(range(0, len(ex)), ex)
+            ax.tick_params(axis='x', colors='white')
+            ax.tick_params(axis='y', colors='white')
+            # plt.savefig('plot.png')
+            # plt.close(fig)
+
+    def get_plot_1(self, method, im, best_p):
+        if method == get_histogram:
+            hist, bins = get_histogram(im, best_p)
+            hist = np.insert(hist, 0, 0.0)
+            fig = plt.figure(figsize=(1.1, 1.1))
+            ax = fig.add_subplot(111)
+            plt.plot(bins, hist)
+            # plt.xticks(color='w')
+            # plt.yticks(color='w')
+            plt.savefig('plot.png')
+            plt.close(fig)
+        elif method == get_dct or method == get_dft:
+            ex = method(im, best_p)
+            fig = plt.figure(figsize=(1.1, 1.1))
+            ax = fig.add_subplot(111)
+            plt.pcolormesh(range(ex.shape[0]), range(ex.shape[0]), np.flip(ex, 0))
+            # plt.xticks(color='w')
+            # plt.yticks(color='w')
+            plt.savefig('plot.png')
+            plt.close(fig)
+        elif method == get_scale:
+            image = cv2.resize(im, (100, 100), interpolation=cv2.INTER_AREA)
+            image = method(image, best_p)
+            cv2.imwrite('plot.png', 255 * image)
+        # gradient
+        else:
+            ex = method(im, best_p)
+            fig = plt.figure(figsize=(1.1, 1.1))
+            ax = fig.add_subplot(111)
+            plt.plot(range(0, len(ex)), ex)
+            # plt.xticks(color='w')
+            # plt.yticks(color='w')
+            plt.savefig('plot.png')
+            plt.close(fig)
 
 if __name__ == '__main__':
     app = QApplication([])
