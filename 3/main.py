@@ -30,7 +30,7 @@ class facesWindow(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.acceptButtonText = 'Запустить'
+        self.acceptButtonText = 'Принять'
         self.methods_list = ['histogram', 'dft', 'dct', 'gradient', 'scale']
         self.num_elements_list = list(map(str, range(1, 10)))
         self.title_col_list = ['train', 'histogram', 'dft', 'dct',
@@ -44,13 +44,6 @@ class facesWindow(QWidget):
         self._1_checkbox_methods = QComboBox(self)
         self._1_textbox_accuracy = QLineEdit()
         self._1_textbox_parametr = QLineEdit()
-        self._1_exnum_parametr = QLineEdit()
-        self._1_lbl_pixmap_1 = QLabel(self)
-        self._1_lbl_pixmap_2 = QLabel(self)
-        self._1_lbl_pixmap_3 = QLabel(self)
-        self._1_lbl_plot_1 = QLabel(self)
-        self._1_lbl_plot_2 = QLabel(self)
-        self._1_lbl_plot_3 = QLabel(self)
         # 2 step
         self._2_label = QLabel(self)
         self._2_tab = QFrame()
@@ -69,6 +62,30 @@ class facesWindow(QWidget):
         self._3_lbl_plot = QLabel(self)
         # self._3_parambox = []
         # 4 step
+        self._4_label = QLabel(self)
+        self._4_tab = QFrame()
+        self._4_vLayout = QVBoxLayout()
+        self._4_lbl_pixmap_1 = QLabel(self)
+        self._4_lbl_pixmap_2 = QLabel(self)
+        self._4_lbl_pixmap_3 = QLabel(self)
+        self._4_lbl_plot_1 = QLabel(self)
+        self._4_lbl_plot_2 = QLabel(self)
+        self._4_lbl_plot_3 = QLabel(self)
+        self._4_checkbox_methods = QComboBox(self)
+        self._4_textbox_parametr = QLineEdit()
+        # 5 step
+        self._5_label = QLabel(self)
+        self._5_tab = QFrame()
+        self._5_vLayout = QVBoxLayout()
+        self._5_lbl_pixmap_1 = QLabel(self)
+        self._5_lbl_pixmap_2 = QLabel(self)
+        self._5_lbl_plot_1 = QLabel(self)
+        self._5_lbl_plot_2 = QLabel(self)
+        self._5_checkbox_num_elements = QComboBox(self)
+        self._5_checkbox_methods = QComboBox(self)
+        self._5_textbox_parametr = QLineEdit()
+        self._5_exnum_parametr = QLineEdit()
+
         # Main tab
         self.tab = QTabWidget()
 
@@ -105,31 +122,6 @@ class facesWindow(QWidget):
         self._1_textbox_parametr.setText('Параметр')
         self._1_textbox_parametr.setAlignment(Qt.AlignCenter)
         hLayout.addWidget(self._1_textbox_parametr)
-        self._1_vLayout.addLayout(hLayout)
-
-        self._1_exnum_parametr.setText('Введите номер тестового обьекта для поиска похожего')
-        self._1_exnum_parametr.setAlignment(Qt.AlignCenter)
-        self._1_vLayout.addWidget(self._1_exnum_parametr)
-
-        hLayout = QHBoxLayout()
-        accept = QPushButton('Вывести изображения')
-        accept.setFixedWidth(self.Settings.acceptButtonWidth)
-        accept.clicked.connect(self._1_on_click_examples)
-        hLayout.addWidget(accept)
-        self._1_vLayout.addLayout(hLayout)
-
-        hLayout = QHBoxLayout()
-        hLayout.addWidget(self._1_lbl_pixmap_1)
-        hLayout.addWidget(self._1_lbl_pixmap_2)
-        hLayout.addWidget(self._1_lbl_pixmap_3)
-        hLayout.setAlignment(Qt.AlignCenter)
-        self._1_vLayout.addLayout(hLayout)
-
-        hLayout = QHBoxLayout()
-        hLayout.addWidget(self._1_lbl_plot_1)
-        hLayout.addWidget(self._1_lbl_plot_2)
-        hLayout.addWidget(self._1_lbl_plot_3)
-        hLayout.setAlignment(Qt.AlignCenter)
         self._1_vLayout.addLayout(hLayout)
 
         self._1_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
@@ -247,12 +239,97 @@ class facesWindow(QWidget):
 
         # 4 step
 
+        self._4_checkbox_methods.addItems(self.methods_list)
+        self._4_checkbox_methods.setEditable(True)
+        line_edit = self._4_checkbox_methods.lineEdit()
+        line_edit.setText('Выберите метод')
+        line_edit.setAlignment(Qt.AlignCenter)
+        line_edit.setReadOnly(True)
+        self._4_vLayout.addWidget(self._4_checkbox_methods)
+
+        self._4_textbox_parametr.setText('Параметр')
+        self._4_textbox_parametr.setAlignment(Qt.AlignCenter)
+        self._4_vLayout.addWidget(self._4_textbox_parametr)
+
+        hLayout = QHBoxLayout()
+        accept = QPushButton(self.acceptButtonText)
+        accept.setFixedWidth(self.Settings.acceptButtonWidth)
+        accept.clicked.connect(self._4_on_click_examples)
+        hLayout.addWidget(accept)
+        self._4_vLayout.addLayout(hLayout)
+
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(self._4_lbl_pixmap_1)
+        hLayout.addWidget(self._4_lbl_pixmap_2)
+        hLayout.addWidget(self._4_lbl_pixmap_3)
+        hLayout.setAlignment(Qt.AlignCenter)
+        self._4_vLayout.addLayout(hLayout)
+
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(self._4_lbl_plot_1)
+        hLayout.addWidget(self._4_lbl_plot_2)
+        hLayout.addWidget(self._4_lbl_plot_3)
+        hLayout.setAlignment(Qt.AlignCenter)
+        self._4_vLayout.addLayout(hLayout)
+
+        self._4_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+        self._4_tab.setLayout(self._4_vLayout)
+
+        # Step 5
+
+        self._5_checkbox_methods.addItems(self.methods_list)
+        self._5_checkbox_methods.setEditable(True)
+        line_edit = self._5_checkbox_methods.lineEdit()
+        line_edit.setText('Выберите метод')
+        line_edit.setAlignment(Qt.AlignCenter)
+        line_edit.setReadOnly(True)
+        self._5_vLayout.addWidget(self._5_checkbox_methods)
+
+        self._5_checkbox_num_elements.addItems(self.num_elements_list)
+        self._5_checkbox_num_elements.setEditable(True)
+        line_edit = self._5_checkbox_num_elements.lineEdit()
+        line_edit.setText('Выберите количество элементов из сэмпла для обучения')
+        line_edit.setAlignment(Qt.AlignCenter)
+        line_edit.setReadOnly(True)
+        self._5_vLayout.addWidget(self._5_checkbox_num_elements)
+
+        self._5_textbox_parametr.setText('Параметр')
+        self._5_textbox_parametr.setAlignment(Qt.AlignCenter)
+        self._5_vLayout.addWidget(self._5_textbox_parametr)
+
+        self._5_exnum_parametr.setText('Введите номер тестового обьекта (нумерация от 1)')
+        self._5_exnum_parametr.setAlignment(Qt.AlignCenter)
+        self._5_vLayout.addWidget(self._5_exnum_parametr)
+
+        hLayout = QHBoxLayout()
+        accept = QPushButton(self.acceptButtonText)
+        accept.setFixedWidth(self.Settings.acceptButtonWidth)
+        accept.clicked.connect(self._5_on_click_examples)
+        hLayout.addWidget(accept)
+        self._5_vLayout.addLayout(hLayout)
+
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(self._5_lbl_pixmap_1)
+        hLayout.addWidget(self._5_lbl_pixmap_2)
+        hLayout.setAlignment(Qt.AlignCenter)
+        self._5_vLayout.addLayout(hLayout)
+
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(self._5_lbl_plot_1)
+        hLayout.addWidget(self._5_lbl_plot_2)
+        hLayout.setAlignment(Qt.AlignCenter)
+        self._5_vLayout.addLayout(hLayout)
+
+        self._5_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+        self._5_tab.setLayout(self._5_vLayout)
+
         # Main tab
 
         self.tab.addTab(self._1_tab, "Поиск лучшего параметра")
         self.tab.addTab(self._2_tab, "Кросс-валидация")
         self.tab.addTab(self._3_tab, "Голосование методов")
-        # self.tab.addTab(self._4_tab, "Примеры")
+        self.tab.addTab(self._4_tab, "Примеры")
+        self.tab.addTab(self._5_tab, "Похожие")
 
         main_layout = QHBoxLayout()
         main_layout.addWidget(self.tab)
@@ -270,7 +347,7 @@ class facesWindow(QWidget):
         method = eval('get_' + self._1_checkbox_methods.currentText())
         data_train, data_test = get_split_data(data,
                 10 - int(self._1_checkbox_num_elements.currentText()))
-        if self._1_textbox_parametr == '':
+        if (self._1_textbox_parametr.text() == '') or (self._1_textbox_parametr.text() == 'Параметр'):
             best_p, accuracy = get_best_params(data_train, data_test, method)
             self._1_textbox_accuracy.setText(str(round(accuracy, 3)))
             self._1_textbox_parametr.setText(str(best_p))
@@ -346,7 +423,7 @@ class facesWindow(QWidget):
             fig.show()
             fig.canvas.draw()
 
-    def _1_on_click_examples(self):
+    def _4_on_click_examples(self):
         data = get_data()
         samples, r = get_samples(data)
         samples = samples[0]
@@ -355,12 +432,12 @@ class facesWindow(QWidget):
             image = cv2.resize(images[i], (110, 110), interpolation=cv2.INTER_AREA)
             cv2.imwrite('photo.jpg', 255*image)
             pixmap = QPixmap('photo.jpg')
-            eval(f'self._1_lbl_pixmap_{i+1}').setPixmap(pixmap)
-            eval(f'self._1_lbl_pixmap_{i+1}').adjustSize()
-            method = 'get_' + self._1_checkbox_methods.currentText()
+            eval(f'self._4_lbl_pixmap_{i+1}').setPixmap(pixmap)
+            eval(f'self._4_lbl_pixmap_{i+1}').adjustSize()
+            method = 'get_' + self._4_checkbox_methods.currentText()
             method = eval(method)
             if method == get_histogram:
-                hist, bins = get_histogram(images[i], int(self._1_textbox_parametr.text()))
+                hist, bins = get_histogram(images[i], int(self._4_textbox_parametr.text()))
                 hist = np.insert(hist, 0, 0.0)
                 fig = plt.figure(figsize=(1.1, 1.1))
                 ax = fig.add_subplot(111)
@@ -370,7 +447,7 @@ class facesWindow(QWidget):
                 plt.savefig('plot.png')
                 plt.close(fig)
             elif method == get_dct or method == get_dft:
-                ex = method(images[i], int(self._1_textbox_parametr.text()))
+                ex = method(images[i], int(self._4_textbox_parametr.text()))
                 fig = plt.figure(figsize=(1.1, 1.1))
                 ax = fig.add_subplot(111)
                 ax.pcolormesh(range(ex.shape[0]), range(ex.shape[0]), np.flip(ex, 0))
@@ -379,10 +456,10 @@ class facesWindow(QWidget):
                 plt.savefig('plot.png')
                 plt.close(fig)
             elif method == get_scale:
-                image = method(images[i], float(self._1_textbox_parametr.text()))
+                image = method(images[i], float(self._4_textbox_parametr.text()))
                 cv2.imwrite('plot.png', 255 * image)
             else:
-                ex = method(images[i], int(self._1_textbox_parametr.text()))
+                ex = method(images[i], int(self._4_textbox_parametr.text()))
                 fig = plt.figure(figsize=(1.1, 1.1))
                 ax = fig.add_subplot(111)
                 ax.plot(range(0, len(ex)), ex)
@@ -392,8 +469,42 @@ class facesWindow(QWidget):
                 plt.close(fig)
 
             pixmap1 = QPixmap('plot.png')
-            eval(f'self._1_lbl_plot_{i+1}').setPixmap(pixmap1)
-            eval(f'self._1_lbl_plot_{i+1}').adjustSize()
+            eval(f'self._4_lbl_plot_{i+1}').setPixmap(pixmap1)
+            eval(f'self._4_lbl_plot_{i+1}').adjustSize()
+
+    def _5_on_click_examples(self):
+        method = eval('get_' + self._5_checkbox_methods.currentText())
+        if method == get_scale:
+            param = float(self._5_textbox_parametr.text())
+        else:
+            param = int(self._5_textbox_parametr.text())
+        test = 10 - int(self._5_checkbox_num_elements.currentText())
+        num = int(self._5_exnum_parametr.text()) - 1
+        data = get_data()
+        data_train, data_test = get_split_data(data, test)
+        ind = closest(data_train, data_test[0][num], method, param)
+
+        im = cv2.resize(data_test[0][num], (100, 100), interpolation=cv2.INTER_AREA)
+        cv2.imwrite('test.jpg', 255 * im)
+        pixmap = QPixmap('test.jpg')
+        self._5_lbl_pixmap_1.setPixmap(pixmap)
+        self._5_lbl_pixmap_1.adjustSize()
+
+        im = cv2.resize(data_train[0][ind], (100, 100), interpolation=cv2.INTER_AREA)
+        cv2.imwrite('test.jpg', 255 * im)
+        pixmap = QPixmap('test.jpg')
+        self._5_lbl_pixmap_2.setPixmap(pixmap)
+        self._5_lbl_pixmap_2.adjustSize()
+
+        self.get_plot_1(method, data_test[0][num], param)
+        pixmap = QPixmap('plot.png')
+        self._5_lbl_plot_1.setPixmap(pixmap)
+        self._5_lbl_plot_1.adjustSize()
+
+        self.get_plot_1(method, data_train[0][ind], param)
+        pixmap = QPixmap('plot.png')
+        self._5_lbl_plot_2.setPixmap(pixmap)
+        self._5_lbl_plot_2.adjustSize()
 
     def _2_on_click(self):
         data = get_data()
