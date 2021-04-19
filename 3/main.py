@@ -15,12 +15,13 @@ from faceclass          import *
 class facesWindowSettings():
 
     def __init__(self, X_offset, Y_offset, Width, Height,
-                acceptButtonWidth):
+                acceptButtonWidth, plotPause):
         self.X_offset = X_offset
         self.Y_offset = Y_offset
         self.Width = Width
         self.Height = Height
         self.acceptButtonWidth = acceptButtonWidth
+        self.plotPause = plotPause
 
 class facesWindow(QWidget):
 
@@ -32,6 +33,7 @@ class facesWindow(QWidget):
     def initUI(self):
         self.acceptButtonText = 'Принять'
         self.methods_list = ['histogram', 'dft', 'dct', 'gradient', 'scale']
+        self.voting_methods_list = ['histogram', 'dft', 'dct', 'gradient', 'scale', 'voting']
         self.num_elements_list = list(map(str, range(1, 10)))
         self.title_col_list = ['train', 'histogram', 'dft', 'dct',
                 'gradient', 'scale', 'голосование']
@@ -85,6 +87,20 @@ class facesWindow(QWidget):
         self._5_checkbox_methods = QComboBox(self)
         self._5_textbox_parametr = QLineEdit()
         self._5_exnum_parametr = QLineEdit()
+        # 6 step
+        self._6_label = QLabel(self)
+        self._6_tab = QFrame()
+        self._6_vLayout = QVBoxLayout()
+        self._6_checkbox_num_elements = QComboBox(self)
+        self._6_textboxes_accuracy = []
+        for i in range(6):
+            self._6_textboxes_accuracy.append(QLineEdit())
+        self._6_textboxes_param = []
+        for i in range(6):
+            self._6_textboxes_param.append(QLineEdit())
+        self._6_textboxes_method = []
+        for i in range(6):
+            self._6_textboxes_method.append(QLineEdit())
 
         # Main tab
         self.tab = QTabWidget()
@@ -144,9 +160,6 @@ class facesWindow(QWidget):
         hLayout.addWidget(accept)
         self._2_vLayout.addLayout(hLayout)
 
-        self._2_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
-        self._2_tab.setLayout(self._2_vLayout)
-
         hLayoutTitle = QHBoxLayout()
         hLayoutParams = QHBoxLayout()
         hLayoutAccuracy = QHBoxLayout()
@@ -182,6 +195,9 @@ class facesWindow(QWidget):
         hLayout.addWidget(self._2_lbl_pixmap_cross)
         hLayout.setAlignment(Qt.AlignCenter)
         self._2_vLayout.addLayout(hLayout)
+
+        self._2_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+        self._2_tab.setLayout(self._2_vLayout)
 
         # 3 step
 
@@ -297,7 +313,7 @@ class facesWindow(QWidget):
         self._5_textbox_parametr.setAlignment(Qt.AlignCenter)
         self._5_vLayout.addWidget(self._5_textbox_parametr)
 
-        self._5_exnum_parametr.setText('Введите номер тестового обьекта (нумерация от 1)')
+        self._5_exnum_parametr.setText('Введите номер тестового обьекта (нумерация от 0)')
         self._5_exnum_parametr.setAlignment(Qt.AlignCenter)
         self._5_vLayout.addWidget(self._5_exnum_parametr)
 
@@ -323,13 +339,50 @@ class facesWindow(QWidget):
         self._5_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
         self._5_tab.setLayout(self._5_vLayout)
 
+        # 6 step
+
+        self._6_checkbox_num_elements.addItems(self.num_elements_list)
+        self._6_checkbox_num_elements.setEditable(True)
+        line_edit = self._6_checkbox_num_elements.lineEdit()
+        line_edit.setText('Выберите количество элементов из сэмпла для обучения')
+        line_edit.setAlignment(Qt.AlignCenter)
+        line_edit.setReadOnly(True)
+        self._6_vLayout.addWidget(self._6_checkbox_num_elements)
+
+        for (i, method) in zip(range(6), self.voting_methods_list):
+            hLayout = QHBoxLayout()
+            self._6_textboxes_method[i].setText(method + ':')
+            self._6_textboxes_method[i].setAlignment(Qt.AlignCenter)
+            self._6_textboxes_method[i].setReadOnly(True)
+            hLayout.addWidget(self._6_textboxes_method[i])
+            self._6_textboxes_accuracy[i].setText('accuracy')
+            self._6_textboxes_accuracy[i].setAlignment(Qt.AlignCenter)
+            self._6_textboxes_accuracy[i].setReadOnly(True)
+            hLayout.addWidget(self._6_textboxes_accuracy[i])
+            if i != 5:
+                self._6_textboxes_param[i].setText('Параметр')
+                self._6_textboxes_param[i].setAlignment(Qt.AlignCenter)
+                hLayout.addWidget(self._6_textboxes_param[i])
+            self._6_vLayout.addLayout(hLayout)
+
+        hLayout = QHBoxLayout()
+        accept = QPushButton(self.acceptButtonText)
+        accept.setFixedWidth(self.Settings.acceptButtonWidth)
+        accept.clicked.connect(self._6_voting)
+        hLayout.addWidget(accept)
+        self._6_vLayout.addLayout(hLayout)
+
+        self._6_vLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+        self._6_tab.setLayout(self._6_vLayout)
+
         # Main tab
 
-        self.tab.addTab(self._1_tab, "Поиск лучшего параметра")
-        self.tab.addTab(self._2_tab, "Кросс-валидация")
-        self.tab.addTab(self._3_tab, "Голосование методов")
         self.tab.addTab(self._4_tab, "Примеры")
+        self.tab.addTab(self._1_tab,"Лучший параметр")
         self.tab.addTab(self._5_tab, "Похожие")
+        self.tab.addTab(self._2_tab, "Кросс-валидация")
+        self.tab.addTab(self._6_tab, "Голосование")
+        self.tab.addTab(self._3_tab, "Кросс-валидация - голосование")
 
         main_layout = QHBoxLayout()
         main_layout.addWidget(self.tab)
@@ -375,7 +428,7 @@ class facesWindow(QWidget):
         # ax4.axis('off')
         ax = fig.add_subplot(2, 1, 2)
         ax.set_xlim(0, len(data_test[0]))
-        ax.set_ylim(0, 1)
+        ax.set_ylim(0, 1.02)
         plt.ion()
         res = []
         for i in range(len(data_test[0])):
@@ -391,7 +444,7 @@ class facesWindow(QWidget):
             ax.set_xlabel('test_num')
             ax.set_ylabel('accuracy')
             ax.set_xlim(0, len(data_test[0]))
-            ax.set_ylim(0, 1)
+            ax.set_ylim(0, 1.02)
             # ax3.axis('off')
             # ax4.axis('off')
             ax1.axis('off')
@@ -419,7 +472,7 @@ class facesWindow(QWidget):
             self.get_plot(method, data_test[0][i], best_p, ax3)
 
             self.get_plot(method, im, best_p, ax4)
-            plt.pause(2)
+            plt.pause(self.Settings.plotPause)
             fig.show()
             fig.canvas.draw()
 
@@ -479,7 +532,7 @@ class facesWindow(QWidget):
         else:
             param = int(self._5_textbox_parametr.text())
         test = 10 - int(self._5_checkbox_num_elements.currentText())
-        num = int(self._5_exnum_parametr.text()) - 1
+        num = int(self._5_exnum_parametr.text())
         data = get_data()
         data_train, data_test = get_split_data(data, test)
         ind = closest(data_train, data_test[0][num], method, param)
@@ -510,11 +563,13 @@ class facesWindow(QWidget):
         data = get_data()
         method = eval('get_' + self._2_checkbox_methods.currentText())
         ans, ps = get_cross(data, method)
-        fig, ax = plt.subplots(figsize=(3.2, 2.5))
-        plt.plot(range(1, len(ans)+1), ans)
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
+        plt.xlim((1, 9))
+        plt.plot([i for i in range(1, len(ans) + 1)], ans)
         plt.grid(True)
-        plt.xlabel("Number of test")
-        plt.ylabel("Accuracy")
+        plt.title('Кросс-валидация')
+        plt.xlabel("train_num")
+        plt.ylabel("accuracy")
         plt.savefig('plot1.png')
         plt.close()
         pixmap2 = QPixmap('plot1.png')
@@ -528,16 +583,19 @@ class facesWindow(QWidget):
             self._2_accuracybox[i].setText(str(round(ans[i - 1], 3)))
 
     def _3_on_click(self):
-        data = get_data()
-        accuracy = []
-        ps = []
-        for i in range(9, 0, -1):
-            data_train, data_test = get_split_data(data, i)
-            r, p = get_vote(data_train, data_test)
-            a = accuracy_score(r, data_test[1])
-            p.append(a)
-            accuracy.append(a)
-            ps.append(p)
+        pass
+# get_vote() изменился по параметрам
+    # def _3_on_click(self):
+    #     data = get_data()
+    #     accuracy = []
+    #     ps = []
+    #     for i in range(9, 0, -1):
+    #         data_train, data_test = get_split_data(data, i)
+    #         r, p = get_vote(data_train, data_test)
+    #         a = accuracy_score(r, data_test[1])
+    #         p.append(a)
+    #         accuracy.append(a)
+    #         ps.append(p)
 
         fig, ax = plt.subplots(figsize=(3.2, 2.5))
         plt.plot(range(1, len(accuracy) + 1), accuracy)
@@ -554,6 +612,114 @@ class facesWindow(QWidget):
                 self._3_textbox_matrix[string][column].setText(
                     str(round(ps[string - 1][column - 1], 3))
                 )
+
+    def _6_voting(self):
+        test = 10 - int(self._6_checkbox_num_elements.currentText())
+        methods = ["histogram", "gradient", "dft", "dct", "scale"]
+        data = get_data()
+        data_train, data_test = get_split_data(data, test)
+        result = []
+        for i in range(len(methods)):
+            method = eval('get_'+methods[i])
+            if (self._6_textboxes_param[i].text() == '') or (self._6_textboxes_param[i].text() == 'Параметр'):
+                best_p, a = get_best_params(data_train, data_test, method)
+                r = classifier(data_train, data_test, method, best_p)
+                self._6_textboxes_param[i].setText(str(round(best_p, 3)))
+                self._6_textboxes_accuracy[i].setText(str(round(a, 3)))
+            else:
+                if method == get_scale:
+                    best_p = float(self._6_textboxes_param[i].text())
+                else:
+                    best_p = int(self._6_textboxes_param[i].text())
+                r = classifier(data_train, data_test, method, best_p)
+                a = accuracy_score(r, data_test[1])
+                self._6_textboxes_accuracy[i].setText(str(round(a, 3)))
+            result.append(r)
+
+        result = np.array(result)
+        result = result.transpose()
+        result = result.tolist()
+        result = list(map(lambda x: max(x, key=x.count), result))
+        ac = accuracy_score(result, data_test[1])
+        self._6_textboxes_accuracy[-1].setText(str(round(ac, 3)))
+
+        fig = plt.figure(figsize=(12, 12))
+        ax_im = []
+        ax_f = []
+        ax_im_f = []
+        for i in range(6):
+            ax_im.append(fig.add_subplot(6, 6, i+1))
+            # ax_f.append(fig.add_subplot(6, 6, i+7))
+            # ax_im_f.append(fig.add_subplot(6, 6, i+14))
+        for i in range(5):
+            ax_f.append(fig.add_subplot(6, 6, i+8))
+            ax_im_f.append(fig.add_subplot(6, 6, i+14))
+
+        ax = fig.add_subplot(2, 1, 2)
+        ax.set_xlim(0, len(data_test[0]))
+        ax.set_ylim(0, 1.02)
+        plt.ion()
+        res = {"histogram":[], "gradient":[], "dft":[], "dct":[], "scale":[], "voting":[]}
+
+        for k in range(len(data_test[0])):
+            ax_im[0].clear()
+            ax_im[0].set_title('Тестовое изображение:')
+            ax_im[0].axis('off')
+            # ax_f[0].clear()
+            for i in range(1, 6):
+                ax_im[i].clear()
+                ax_im[i].set_title(methods[i-1] + ':')
+                ax_im[i].axis('off')
+            for i in range(5):
+                ax_f[i].clear()
+                ax_im_f[i].clear()
+            ax_f[4].axis('off')
+            ax_im_f[4].axis('off')
+            ax.clear()
+            ax.set_xlabel('test_num')
+            ax.set_ylabel('accuracy')
+            ax.set_xlim(0, len(data_test[0]))
+            ax.set_ylim(0, 1.02)
+
+            image = cv2.resize(data_test[0][k], (100, 100), interpolation=cv2.INTER_AREA)
+            cv2.imwrite('test.jpg', 255 * image)
+            image = plt.imread('test.jpg')
+            ax_im_image = data_test[0][k]
+            ax_im[0].imshow(image, cmap='gray')
+
+            for i in range(5):
+                method = eval('get_'+methods[i])
+                if method == get_scale:
+                    p = float(self._6_textboxes_param[i].text())
+                else:
+                    p = int(self._6_textboxes_param[i].text())
+
+                ind = closest(data_train, data_test[0][k], method, p)
+                image = cv2.resize(data_train[0][ind], (100, 100), interpolation=cv2.INTER_AREA)
+                cv2.imwrite('test.jpg', 255 * image)
+                image = plt.imread('test.jpg')
+                ax_im[i+1].imshow(image, cmap='gray')
+                self.get_plot(method, data_train[0][ind], p, ax_f[i])
+                self.get_plot(method, ax_im_image, p, ax_im_f[i])
+
+                if data_test[1][k] == data_train[1][ind]:
+                    res[methods[i]].append(1)
+                else:
+                    res[methods[i]].append(0)
+
+            if data_test[1][k] == result[k]:
+                res['voting'].append(1)
+            else:
+                res['voting'].append(0)
+            data = []
+            for m in res.keys():
+                data.append([mean(res[m][:i+1]) for i in range(len(res[m]))])
+            for y in data:
+                ax.plot([i for i in range(len(res['voting']))], y)
+            ax.legend(["histogram", "gradient", "dft", "dct", "scale", "voting"])
+            plt.pause(self.Settings.plotPause)
+            fig.show()
+            fig.canvas.draw()
 
     def get_plot(self, method, im, best_p, ax):
         if method == get_histogram:
@@ -629,7 +795,7 @@ class facesWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication([])
-    settings = facesWindowSettings(500, 120, 1000, 700, 200)
+    settings = facesWindowSettings(500, 120, 1000, 700, 200, 1.2)
     widget = facesWindow(settings)
     widget.show()
     sys.exit(app.exec_())
