@@ -62,7 +62,7 @@ class facesWindow(QWidget):
         self._3_col_num = 7
         self._3_str_num = 10
         self._3_lbl_plot = QLabel(self)
-        # self._3_parambox = []
+        self._3_parambox = []
         # 4 step
         self._4_label = QLabel(self)
         self._4_tab = QFrame()
@@ -204,13 +204,13 @@ class facesWindow(QWidget):
         # hLayoutTitle = QHBoxLayout()
         # hLayoutParams = QHBoxLayout()
 
-        # for i in range(0, 2):
+        # for i in range(0, 1):
         #     for j in range(1, self._3_col_num - 1):
         #         textbox = QLineEdit()
         #         textbox.setAlignment(Qt.AlignCenter)
         #         if (i == 0):
         #             textbox.setText(self.title_col_list[j] + ' параметр')
-        #             textbox.setReadOnly(True)
+        #             # textbox.setReadOnly(True)
         #             hLayoutTitle.addWidget(textbox)
         #         if (i == 1):
         #             self._3_parambox.append(textbox)
@@ -238,7 +238,7 @@ class facesWindow(QWidget):
                 if (string == 0):
                     textbox.setText(self.title_col_list[column])
                 textbox.setAlignment(Qt.AlignCenter)
-                textbox.setReadOnly(True)
+                # textbox.setReadOnly(True)
                 layout.addWidget(textbox)
                 textbox_str.append(textbox)
             self._3_textbox_matrix.append(textbox_str)
@@ -583,35 +583,56 @@ class facesWindow(QWidget):
             self._2_accuracybox[i].setText(str(round(ans[i - 1], 3)))
 
     def _3_on_click(self):
-        pass
-# get_vote() изменился по параметрам
-    # def _3_on_click(self):
-    #     data = get_data()
-    #     accuracy = []
-    #     ps = []
-    #     for i in range(9, 0, -1):
-    #         data_train, data_test = get_split_data(data, i)
-    #         r, p = get_vote(data_train, data_test)
-    #         a = accuracy_score(r, data_test[1])
-    #         p.append(a)
-    #         accuracy.append(a)
-    #         ps.append(p)
+        plot = []
+        data = get_data()
+        ps = []
+        for i in range(9, 0, -1):
+            data_train, data_test = get_split_data(data, i)
+            # for string in range(1, self._3_str_num):
+            #     if (self._3_textbox_matrix[string][1].text() != '') and (self._3_textbox_matrix[string][1].text().find(' | ') == -1):
+            #         p = []
+            #         a = []
+            #         for column in range(1, self._3_col_num - 1):
+            #             p.append(self._3_textbox_matrix[string][column])
+            #         r = get_vote_1(data_train, data_test, p)
+            #     else:
+            #         r, a, p = get_vote(data_train, data_test)
+            r, a, p = get_vote(data_train, data_test)
+            ps.append(p)
+            ac = accuracy_score(r, data_test[1])
+            a.append(ac)
+            plot.append(a)
 
-        fig, ax = plt.subplots(figsize=(3.2, 2.5))
-        plt.plot(range(1, len(accuracy) + 1), accuracy)
+        fin = []
+        for i in range(len(plot)):
+            fin.append(plot[i])
+            fin.append(ps[i])
+
+        string = 1
+        for i in range(len(plot[0])-1):
+            column = 1
+            for j in range(0, 17, 2):
+                self._3_textbox_matrix[column][string].setText(str(round(fin[j][i], 2)) + ' | ' + str(round(fin[j+1][i], 2)))
+                column += 1
+            string += 1
+
+        for (i, string) in zip(range(9), range(1, self._3_str_num)):
+            self._3_textbox_matrix[string][self._3_col_num-1].setText(str(round(plot[i][-1], 2)))
+
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
+        # ax = fig.add_subplot(111)
+        plot = np.array(plot)
+        plot = plot.transpose()
+        for i in plot:
+            plt.plot([j for j in range(1, len(i) + 1)], i)
         plt.grid(True)
-        plt.xlabel("Number of test")
-        plt.ylabel("Accuracy")
+        plt.legend(["histogram", "dft", "dct", "gradient", "scale", "voting"])
+        plt.title('Кросс-валидация')
+        plt.xlabel("train_num")
+        plt.ylabel("accuracy")
         plt.savefig('plot1.png')
-        plt.close()
-        pixmap2 = QPixmap('plot1.png')
-        self._3_lbl_plot.setPixmap(pixmap2)
-        self._3_lbl_plot.adjustSize()
-        for string in range(1, self._3_str_num):
-            for column in range(1, self._3_col_num):
-                self._3_textbox_matrix[string][column].setText(
-                    str(round(ps[string - 1][column - 1], 3))
-                )
+        pixmap = QPixmap('plot1.png')
+        self._3_lbl_plot.setPixmap(pixmap)
 
     def _6_voting(self):
         test = 10 - int(self._6_checkbox_num_elements.currentText())
